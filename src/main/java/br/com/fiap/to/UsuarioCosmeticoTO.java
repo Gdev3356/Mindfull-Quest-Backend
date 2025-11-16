@@ -1,7 +1,6 @@
 package br.com.fiap.to;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import java.sql.Date;
 
 public class UsuarioCosmeticoTO {
@@ -9,20 +8,22 @@ public class UsuarioCosmeticoTO {
     private Long idAquisicao;
 
     @NotNull(message = "O ID do usuário é obrigatório")
-    private Long idUsuario; // FK T_DDD_USUARIO
+    private Long idUsuario;
 
     @NotNull(message = "O ID do cosmético é obrigatório")
-    private Long idCosmetico; // FK T_DDD_COSMETICO
+    private Long idCosmetico;
 
     private Date dtAquisicao;
 
-    @Size(max = 1, message = "O status de favorito deve ter 1 caractere (S ou N)")
+    @NotBlank(message = "O status de favorito é obrigatório")
+    @Pattern(regexp = "SIM|NAO", message = "Status inválido. Use: SIM ou NAO")
+    @Size(max = 3, message = "O status de favorito deve ter no máximo 3 caracteres")
     private String stFavorito;
 
-    // Construtores
     public UsuarioCosmeticoTO() {}
 
-    public UsuarioCosmeticoTO(Long idAquisicao, Long idUsuario, Long idCosmetico, Date dtAquisicao, String stFavorito) {
+    public UsuarioCosmeticoTO(Long idAquisicao, Long idUsuario, Long idCosmetico,
+                              Date dtAquisicao, String stFavorito) {
         this.idAquisicao = idAquisicao;
         this.idUsuario = idUsuario;
         this.idCosmetico = idCosmetico;

@@ -1,6 +1,9 @@
 package br.com.fiap.dao;
 
 import br.com.fiap.to.UsuarioAudioTO;
+import br.com.fiap.exception.DAOException;
+import br.com.fiap.exception.IdNotFoundException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,15 +34,14 @@ public class UsuarioAudioDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findAll UsuarioAudio): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findAll UsuarioAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
 
-        return favoritos.isEmpty() ? null : favoritos;
+        return favoritos;
     }
 
-    // Adaptado para chave composta
     public UsuarioAudioTO findByIds(Long idUsuario, Long idAudio) {
         UsuarioAudioTO ua = null;
         String sql = "SELECT * FROM " + TABLE_NAME + " WHERE ID_USUARIO = ? AND ID_AUDIO = ?";
@@ -51,11 +53,13 @@ public class UsuarioAudioDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     ua = mapResultSetToTO(rs);
+                } else {
+                    throw new IdNotFoundException("UsuarioAudio com ID_USUARIO " + idUsuario + " e ID_AUDIO " + idAudio + " não encontrado.");
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findByIds UsuarioAudio): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findByIds UsuarioAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
@@ -73,36 +77,37 @@ public class UsuarioAudioDAO {
             ps.setLong(2, ua.getIdAudio());
             ps.setString(3, ua.getStFavorito());
 
-            if (ps.executeUpdate() > 0) {
-                return ua;
+            if (ps.executeUpdate() == 0) {
+                throw new DAOException("Erro ao salvar (UsuarioAudio): Nenhuma linha afetada.", null);
             }
+            return ua;
         } catch (SQLException e) {
-            System.out.println("Erro ao salvar (UsuarioAudio): " + e.getMessage());
+            throw new DAOException("Erro ao salvar (UsuarioAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 
-    // Adaptado para chave composta
     public boolean delete(Long idUsuario, Long idAudio) {
         String sql = "DELETE FROM " + TABLE_NAME + " WHERE ID_USUARIO = ? AND ID_AUDIO = ?";
 
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
             ps.setLong(1, idUsuario);
             ps.setLong(2, idAudio);
-            return ps.executeUpdate() > 0;
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("UsuarioAudio com ID_USUARIO " + idUsuario + " e ID_AUDIO " + idAudio + " não encontrado para exclusão.");
+            }
+            return true;
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir (UsuarioAudio): " + e.getMessage());
+            throw new DAOException("Erro ao excluir (UsuarioAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return false;
     }
 
-    // Adaptado para chave composta (só atualiza o ST_FAVORITO)
     public UsuarioAudioTO update(UsuarioAudioTO ua) {
         String sql = "UPDATE " + TABLE_NAME +
                 " SET ST_FAVORITO=? " +
@@ -113,15 +118,16 @@ public class UsuarioAudioDAO {
             ps.setLong(2, ua.getIdUsuario());
             ps.setLong(3, ua.getIdAudio());
 
-            if (ps.executeUpdate() > 0) {
-                return ua;
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("UsuarioAudio com ID_USUARIO " + ua.getIdUsuario() + " e ID_AUDIO " + ua.getIdAudio() + " não encontrado para atualização.");
             }
+            return ua;
         } catch (SQLException e) {
-            System.out.println("Erro ao atualizar (UsuarioAudio): " + e.getMessage());
+            throw new DAOException("Erro ao atualizar (UsuarioAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 }

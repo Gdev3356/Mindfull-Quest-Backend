@@ -1,6 +1,9 @@
 package br.com.fiap.dao;
 
 import br.com.fiap.to.UsuarioCosmeticoTO;
+import br.com.fiap.exception.DAOException;
+import br.com.fiap.exception.IdNotFoundException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,12 +36,12 @@ public class UsuarioCosmeticoDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findAll UsuarioCosmetico): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findAll UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
 
-        return aquisicoes.isEmpty() ? null : aquisicoes;
+        return aquisicoes;
     }
 
     public UsuarioCosmeticoTO findById(Long id) {
@@ -51,11 +54,13 @@ public class UsuarioCosmeticoDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     uc = mapResultSetToTO(rs);
+                } else {
+                    throw new IdNotFoundException("Aquisição de Cosmético com ID " + id + " não encontrada.");
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findById UsuarioCosmetico): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findById UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
@@ -74,16 +79,15 @@ public class UsuarioCosmeticoDAO {
             ps.setDate(3, uc.getDtAquisicao());
             ps.setString(4, uc.getStFavorito());
 
-            if (ps.executeUpdate() > 0) {
-                return uc;
+            if (ps.executeUpdate() == 0) {
+                throw new DAOException("Erro ao salvar (UsuarioCosmetico): Nenhuma linha afetada.", null);
             }
+            return uc;
         } catch (SQLException e) {
-            System.out.println("Erro ao salvar (UsuarioCosmetico): " + e.getMessage());
+            throw new DAOException("Erro ao salvar (UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 
     public boolean delete(Long id) {
@@ -91,14 +95,18 @@ public class UsuarioCosmeticoDAO {
 
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
-            return ps.executeUpdate() > 0;
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("Aquisição de Cosmético com ID " + id + " não encontrada para exclusão.");
+            }
+            return true;
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir (UsuarioCosmetico): " + e.getMessage());
+            throw new DAOException("Erro ao excluir (UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return false;
     }
 
     public UsuarioCosmeticoTO update(UsuarioCosmeticoTO uc) {
@@ -113,15 +121,16 @@ public class UsuarioCosmeticoDAO {
             ps.setString(4, uc.getStFavorito());
             ps.setLong(5, uc.getIdAquisicao());
 
-            if (ps.executeUpdate() > 0) {
-                return uc;
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("Aquisição de Cosmético com ID " + uc.getIdAquisicao() + " não encontrada para atualização.");
             }
+            return uc;
         } catch (SQLException e) {
-            System.out.println("Erro ao atualizar (UsuarioCosmetico): " + e.getMessage());
+            throw new DAOException("Erro ao atualizar (UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 }

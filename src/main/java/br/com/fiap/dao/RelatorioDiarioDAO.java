@@ -1,6 +1,9 @@
 package br.com.fiap.dao;
 
 import br.com.fiap.to.RelatorioDiarioTO;
+import br.com.fiap.exception.DAOException;
+import br.com.fiap.exception.IdNotFoundException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,12 +37,11 @@ public class RelatorioDiarioDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findAll RelatorioDiario): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findAll RelatorioDiario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return relatorios.isEmpty() ? null : relatorios;
+        return relatorios;
     }
 
     public RelatorioDiarioTO findById(Long id) {
@@ -52,15 +54,15 @@ public class RelatorioDiarioDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     relatorio = mapResultSetToTO(rs);
+                } else {
+                    throw new IdNotFoundException("Relatório com ID " + id + " não encontrado.");
                 }
             }
-
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findById RelatorioDiario): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findById RelatorioDiario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
         return relatorio;
     }
 
@@ -76,16 +78,15 @@ public class RelatorioDiarioDAO {
             ps.setInt(4, relatorio.getNrNivelEstresse());
             ps.setString(5, relatorio.getDsLogSemtimento());
 
-            if (ps.executeUpdate() > 0) {
-                return relatorio;
+            if (ps.executeUpdate() == 0) {
+                throw new DAOException("Erro ao salvar (RelatorioDiario): Nenhuma linha afetada.", null);
             }
+            return relatorio;
         } catch (SQLException e) {
-            System.out.println("Erro ao salvar (RelatorioDiario): " + e.getMessage());
+            throw new DAOException("Erro ao salvar (RelatorioDiario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 
     public boolean delete(Long id) {
@@ -93,14 +94,16 @@ public class RelatorioDiarioDAO {
 
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
-            return ps.executeUpdate() > 0;
+
+            if (ps.executeUpdate() == 0) {
+                throw new IdNotFoundException("Relatório com ID " + id + " não encontrado para exclusão.");
+            }
+            return true;
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir (RelatorioDiario): " + e.getMessage());
+            throw new DAOException("Erro ao excluir (RelatorioDiario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return false;
     }
 
     public RelatorioDiarioTO update(RelatorioDiarioTO relatorio) {
@@ -116,15 +119,14 @@ public class RelatorioDiarioDAO {
             ps.setString(5, relatorio.getDsLogSemtimento());
             ps.setLong(6, relatorio.getIdRelatorio());
 
-            if (ps.executeUpdate() > 0) {
-                return relatorio;
+            if (ps.executeUpdate() == 0) {
+                throw new IdNotFoundException("Relatório com ID " + relatorio.getIdRelatorio() + " não encontrado para atualização.");
             }
+            return relatorio;
         } catch (SQLException e) {
-            System.out.println("Erro ao atualizar (RelatorioDiario): " + e.getMessage());
+            throw new DAOException("Erro ao atualizar (RelatorioDiario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 }

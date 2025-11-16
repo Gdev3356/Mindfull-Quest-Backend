@@ -1,26 +1,33 @@
 package br.com.fiap.to;
 
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public class RecursoAudioTO {
 
     private Long idAudio;
 
+    @NotBlank(message = "O nome do áudio é obrigatório")
     @Size(max = 100, message = "O nome deve ter no máximo 100 caracteres")
     private String nmAudio;
 
+    @NotBlank(message = "O caminho do arquivo é obrigatório")
     @Size(max = 500, message = "O caminho do arquivo deve ter no máximo 500 caracteres")
     private String dsCaminhoArquivo;
 
+    @Min(value = 1, message = "A duração deve ser maior que zero")
+    @Max(value = 3600, message = "A duração não pode exceder 3600 segundos")
     private Integer nrDuracaoSeg;
 
+    @NotBlank(message = "O tipo de áudio é obrigatório")
+    @Pattern(regexp = "MEDITACAO|RESPIRACAO|MUSICA|PODCAST",
+            message = "Tipo inválido. Use: MEDITACAO, RESPIRACAO, MUSICA ou PODCAST")
     @Size(max = 20, message = "O tipo deve ter no máximo 20 caracteres")
     private String tpAudio;
 
-    // Construtores
     public RecursoAudioTO() {}
 
-    public RecursoAudioTO(Long idAudio, String nmAudio, String dsCaminhoArquivo, Integer nrDuracaoSeg, String tpAudio) {
+    public RecursoAudioTO(Long idAudio, String nmAudio, String dsCaminhoArquivo,
+                          Integer nrDuracaoSeg, String tpAudio) {
         this.idAudio = idAudio;
         this.nmAudio = nmAudio;
         this.dsCaminhoArquivo = dsCaminhoArquivo;

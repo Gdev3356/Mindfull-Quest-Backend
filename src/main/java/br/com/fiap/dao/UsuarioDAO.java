@@ -1,6 +1,9 @@
 package br.com.fiap.dao;
 
 import br.com.fiap.to.UsuarioTO;
+import br.com.fiap.exception.DAOException;
+import br.com.fiap.exception.IdNotFoundException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,7 +23,6 @@ public class UsuarioDAO {
         usuario.setNrPontosGamificacao(rs.getInt("NR_PONTOS_GAMIFICACAO"));
         usuario.setStUsuario(rs.getString("ST_USUARIO"));
         usuario.setIdAvatarAtivo(rs.getLong("ID_AVATAR_ATIVO"));
-        // Trata caso o getLong retorne 0 para FKs nulas
         if (rs.wasNull()) {
             usuario.setIdAvatarAtivo(null);
         }
@@ -39,12 +41,12 @@ public class UsuarioDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findAll Usuario): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findAll Usuario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
 
-        return usuarios.isEmpty() ? null : usuarios;
+        return usuarios;
     }
 
     public UsuarioTO findById(Long id) {
@@ -57,11 +59,13 @@ public class UsuarioDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     usuario = mapResultSetToTO(rs);
+                } else {
+                    throw new IdNotFoundException("Usuário com ID " + id + " não encontrado.");
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findById Usuario): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findById Usuario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
@@ -87,18 +91,15 @@ public class UsuarioDAO {
                 ps.setNull(6, java.sql.Types.INTEGER);
             }
 
-            if (ps.executeUpdate() > 0) {
-                // Nota: O ID gerado pela sequence/trigger não é retornado aqui,
-                // seguindo o estilo do EspecialidadeDAO.
-                return usuario;
+            if (ps.executeUpdate() == 0) {
+                throw new DAOException("Erro ao salvar (Usuario): Nenhuma linha afetada.", null);
             }
+            return usuario;
         } catch (SQLException e) {
-            System.out.println("Erro ao salvar (Usuario): " + e.getMessage());
+            throw new DAOException("Erro ao salvar (Usuario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 
     public boolean delete(Long id) {
@@ -106,14 +107,18 @@ public class UsuarioDAO {
 
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
-            return ps.executeUpdate() > 0;
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("Usuário com ID " + id + " não encontrado para exclusão.");
+            }
+            return true;
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir (Usuario): " + e.getMessage());
+            throw new DAOException("Erro ao excluir (Usuario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return false;
     }
 
     public UsuarioTO update(UsuarioTO usuario) {
@@ -136,15 +141,16 @@ public class UsuarioDAO {
 
             ps.setLong(7, usuario.getIdUsuario());
 
-            if (ps.executeUpdate() > 0) {
-                return usuario;
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("Usuário com ID " + usuario.getIdUsuario() + " não encontrado para atualização.");
             }
+            return usuario;
         } catch (SQLException e) {
-            System.out.println("Erro ao atualizar (Usuario): " + e.getMessage());
+            throw new DAOException("Erro ao atualizar (Usuario): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 }

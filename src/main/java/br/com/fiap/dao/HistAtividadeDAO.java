@@ -1,6 +1,9 @@
 package br.com.fiap.dao;
 
 import br.com.fiap.to.HistAtividadeTO;
+import br.com.fiap.exception.DAOException;
+import br.com.fiap.exception.IdNotFoundException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,12 +36,12 @@ public class HistAtividadeDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findAll HistAtividade): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findAll HistAtividade): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
 
-        return historico.isEmpty() ? null : historico;
+        return historico;
     }
 
     public HistAtividadeTO findById(Long id) {
@@ -51,11 +54,13 @@ public class HistAtividadeDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     hist = mapResultSetToTO(rs);
+                } else {
+                    throw new IdNotFoundException("Histórico de Atividade com ID " + id + " não encontrado.");
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findById HistAtividade): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findById HistAtividade): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
@@ -74,16 +79,15 @@ public class HistAtividadeDAO {
             ps.setDate(3, hist.getDtConclusao());
             ps.setInt(4, hist.getNrPontosGanhos());
 
-            if (ps.executeUpdate() > 0) {
-                return hist;
+            if (ps.executeUpdate() == 0) {
+                throw new DAOException("Erro ao salvar (HistAtividade): Nenhuma linha afetada.", null);
             }
+            return hist;
         } catch (SQLException e) {
-            System.out.println("Erro ao salvar (HistAtividade): " + e.getMessage());
+            throw new DAOException("Erro ao salvar (HistAtividade): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 
     public boolean delete(Long id) {
@@ -91,14 +95,18 @@ public class HistAtividadeDAO {
 
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
-            return ps.executeUpdate() > 0;
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("Histórico de Atividade com ID " + id + " não encontrado para exclusão.");
+            }
+            return true;
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir (HistAtividade): " + e.getMessage());
+            throw new DAOException("Erro ao excluir (HistAtividade): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return false;
     }
 
     public HistAtividadeTO update(HistAtividadeTO hist) {
@@ -113,15 +121,16 @@ public class HistAtividadeDAO {
             ps.setInt(4, hist.getNrPontosGanhos());
             ps.setLong(5, hist.getIdHistAtividades());
 
-            if (ps.executeUpdate() > 0) {
-                return hist;
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("Histórico de Atividade com ID " + hist.getIdHistAtividades() + " não encontrado para atualização.");
             }
+            return hist;
         } catch (SQLException e) {
-            System.out.println("Erro ao atualizar (HistAtividade): " + e.getMessage());
+            throw new DAOException("Erro ao atualizar (HistAtividade): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 }

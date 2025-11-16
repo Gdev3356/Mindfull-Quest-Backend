@@ -1,27 +1,31 @@
 package br.com.fiap.to;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public class CosmeticoTO {
 
     private Long idCosmetico;
 
-    @Size(max = 100, message = "O nome deve ter no máximo 100 caracteres")
+    @NotBlank(message = "O nome do cosmético é obrigatório")
+    @Size(min = 3, max = 100, message = "O nome deve ter entre 3 e 100 caracteres")
     private String nmCosmetico;
 
+    @NotBlank(message = "O caminho da imagem é obrigatório")
     @Size(max = 500, message = "O caminho da imagem deve ter no máximo 500 caracteres")
     private String dsCaminhoImagem;
 
+    @NotNull(message = "O custo em pontos é obrigatório")
+    @Min(value = 0, message = "O custo não pode ser negativo")
+    @Max(value = 500, message = "O custo não pode exceder 500 pontos")
     private Integer nrCustoPontos;
 
     @Size(max = 20, message = "O tipo deve ter no máximo 20 caracteres")
     private String tpCosmetico;
 
-    // Construtores
     public CosmeticoTO() {}
 
-    public CosmeticoTO(Long idCosmetico, String nmCosmetico, String dsCaminhoImagem, Integer nrCustoPontos, String tpCosmetico) {
+    public CosmeticoTO(Long idCosmetico, String nmCosmetico, String dsCaminhoImagem,
+                       Integer nrCustoPontos, String tpCosmetico) {
         this.idCosmetico = idCosmetico;
         this.nmCosmetico = nmCosmetico;
         this.dsCaminhoImagem = dsCaminhoImagem;

@@ -2,60 +2,110 @@ package br.com.fiap.resource;
 
 import br.com.fiap.bo.RelatorioDiarioBO;
 import br.com.fiap.to.RelatorioDiarioTO;
+import br.com.fiap.exception.BusinessRuleException;
+import br.com.fiap.exception.DAOException;
+import br.com.fiap.exception.IdNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
 import java.util.List;
 
 @Path("/relatorios-diario")
 public class RelatorioDiarioResource {
-    private RelatorioDiarioBO relatorioDiarioBO = new RelatorioDiarioBO();
+    private final RelatorioDiarioBO relatorioDiarioBO = new RelatorioDiarioBO();
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findAll() {
-        List<RelatorioDiarioTO> resultado = relatorioDiarioBO.findAll();
-        Response.ResponseBuilder response = (resultado != null && !resultado.isEmpty()) ? Response.ok() : Response.status(404);
-        response.entity(resultado);
-        return response.build();
+        try {
+            List<RelatorioDiarioTO> resultado = relatorioDiarioBO.findAll();
+            return Response.ok(resultado).build();
+        } catch (DAOException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        }
     }
 
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findById(@PathParam("id") Long id) {
-        RelatorioDiarioTO resultado = relatorioDiarioBO.findById(id);
-        Response.ResponseBuilder response = (resultado != null) ? Response.ok() : Response.status(404);
-        response.entity(resultado);
-        return response.build();
+        try {
+            RelatorioDiarioTO resultado = relatorioDiarioBO.findById(id);
+            return Response.ok(resultado).build();
+        } catch (IdNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        } catch (BusinessRuleException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        } catch (DAOException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        }
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response save(@Valid RelatorioDiarioTO relatorioDiario) {
-        RelatorioDiarioTO resultado = relatorioDiarioBO.save(relatorioDiario);
-        Response.ResponseBuilder response = (resultado != null) ? Response.created(null) : Response.status(400);
-        response.entity(resultado);
-        return response.build();
+        try {
+            RelatorioDiarioTO resultado = relatorioDiarioBO.save(relatorioDiario);
+            return Response.status(Response.Status.CREATED).entity(resultado).build();
+        } catch (BusinessRuleException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        } catch (DAOException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        }
     }
 
     @DELETE
     @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response delete(@PathParam("id") Long id) {
-        Response.ResponseBuilder response = relatorioDiarioBO.delete(id) ? Response.status(204) : Response.status(404);
-        return response.build();
+        try {
+            relatorioDiarioBO.delete(id);
+            return Response.status(Response.Status.NO_CONTENT).build();
+        } catch (IdNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        } catch (BusinessRuleException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        } catch (DAOException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        }
     }
 
     @PUT
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response update(@Valid RelatorioDiarioTO relatorioDiario, @PathParam("id") Long id) {
-        relatorioDiario.setIdRelatorio(id);
-        RelatorioDiarioTO resultado = relatorioDiarioBO.update(relatorioDiario);
-        Response.ResponseBuilder response = (resultado != null) ? Response.ok() : Response.status(400);
-        response.entity(resultado);
-        return response.build();
+        try {
+            relatorioDiario.setIdRelatorio(id);
+            RelatorioDiarioTO resultado = relatorioDiarioBO.update(relatorioDiario);
+            return Response.ok(resultado).build();
+        } catch (IdNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        } catch (BusinessRuleException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        } catch (DAOException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        }
+    }
+
+    public static class ErrorResponse {
+        private String message;
+        public ErrorResponse(String message) { this.message = message; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
     }
 }

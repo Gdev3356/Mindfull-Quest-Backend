@@ -1,6 +1,9 @@
 package br.com.fiap.dao;
 
 import br.com.fiap.to.MedidaCuidadoTO;
+import br.com.fiap.exception.DAOException;
+import br.com.fiap.exception.IdNotFoundException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,12 +36,14 @@ public class MedidaCuidadoDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findAll MedidaCuidado): " + e.getMessage());
+            // Lança exceção em vez de apenas imprimir
+            throw new DAOException("Erro na consulta (findAll MedidaCuidado): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
 
-        return medidas.isEmpty() ? null : medidas;
+        // Retorna a lista (pode estar vazia, mas não é null)
+        return medidas;
     }
 
     public MedidaCuidadoTO findById(Long id) {
@@ -51,16 +56,17 @@ public class MedidaCuidadoDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     medida = mapResultSetToTO(rs);
+                } else {
+                    throw new IdNotFoundException("Medida de Cuidado com ID " + id + " não encontrada.");
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findById MedidaCuidado): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findById MedidaCuidado): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return medida;
+        return medida; // Retorna a medida se encontrada
     }
 
     public MedidaCuidadoTO save(MedidaCuidadoTO medida) {
@@ -75,15 +81,16 @@ public class MedidaCuidadoDAO {
             ps.setInt(4, medida.getNrPontosGanhos());
 
             if (ps.executeUpdate() > 0) {
+                // Opcional: Se precisar do ID gerado, usaria getGeneratedKeys
                 return medida;
+            } else {
+                throw new DAOException("Erro ao salvar (MedidaCuidado): Nenhuma linha afetada.", null);
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao salvar (MedidaCuidado): " + e.getMessage());
+            throw new DAOException("Erro ao salvar (MedidaCuidado): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 
     public boolean delete(Long id) {
@@ -91,14 +98,19 @@ public class MedidaCuidadoDAO {
 
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
-            return ps.executeUpdate() > 0;
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("Medida de Cuidado com ID " + id + " não encontrada para exclusão.");
+            }
+            return true;
+
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir (MedidaCuidado): " + e.getMessage());
+            throw new DAOException("Erro ao excluir (MedidaCuidado): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return false;
     }
 
     public MedidaCuidadoTO update(MedidaCuidadoTO medida) {
@@ -113,15 +125,17 @@ public class MedidaCuidadoDAO {
             ps.setInt(4, medida.getNrPontosGanhos());
             ps.setLong(5, medida.getIdMedida());
 
-            if (ps.executeUpdate() > 0) {
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
                 return medida;
+            } else {
+                throw new IdNotFoundException("Medida de Cuidado com ID " + medida.getIdMedida() + " não encontrada para atualização.");
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao atualizar (MedidaCuidado): " + e.getMessage());
+            throw new DAOException("Erro ao atualizar (MedidaCuidado): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 }

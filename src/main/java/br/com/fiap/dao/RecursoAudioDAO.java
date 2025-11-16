@@ -1,6 +1,9 @@
 package br.com.fiap.dao;
 
 import br.com.fiap.to.RecursoAudioTO;
+import br.com.fiap.exception.DAOException;
+import br.com.fiap.exception.IdNotFoundException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,12 +36,12 @@ public class RecursoAudioDAO {
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findAll RecursoAudio): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findAll RecursoAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
 
-        return audios.isEmpty() ? null : audios;
+        return audios;
     }
 
     public RecursoAudioTO findById(Long id) {
@@ -51,11 +54,13 @@ public class RecursoAudioDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     audio = mapResultSetToTO(rs);
+                } else {
+                    throw new IdNotFoundException("Recurso de Áudio com ID " + id + " não encontrado.");
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println("Erro na consulta (findById RecursoAudio): " + e.getMessage());
+            throw new DAOException("Erro na consulta (findById RecursoAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
@@ -74,16 +79,15 @@ public class RecursoAudioDAO {
             ps.setInt(3, audio.getNrDuracaoSeg());
             ps.setString(4, audio.getTpAudio());
 
-            if (ps.executeUpdate() > 0) {
-                return audio;
+            if (ps.executeUpdate() == 0) {
+                throw new DAOException("Erro ao salvar (RecursoAudio): Nenhuma linha afetada.", null);
             }
+            return audio;
         } catch (SQLException e) {
-            System.out.println("Erro ao salvar (RecursoAudio): " + e.getMessage());
+            throw new DAOException("Erro ao salvar (RecursoAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 
     public boolean delete(Long id) {
@@ -91,14 +95,18 @@ public class RecursoAudioDAO {
 
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
-            return ps.executeUpdate() > 0;
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("Recurso de Áudio com ID " + id + " não encontrado para exclusão.");
+            }
+            return true;
         } catch (SQLException e) {
-            System.out.println("Erro ao excluir (RecursoAudio): " + e.getMessage());
+            throw new DAOException("Erro ao excluir (RecursoAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return false;
     }
 
     public RecursoAudioTO update(RecursoAudioTO audio) {
@@ -113,15 +121,16 @@ public class RecursoAudioDAO {
             ps.setString(4, audio.getTpAudio());
             ps.setLong(5, audio.getIdAudio());
 
-            if (ps.executeUpdate() > 0) {
-                return audio;
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new IdNotFoundException("Recurso de Áudio com ID " + audio.getIdAudio() + " não encontrado para atualização.");
             }
+            return audio;
         } catch (SQLException e) {
-            System.out.println("Erro ao atualizar (RecursoAudio): " + e.getMessage());
+            throw new DAOException("Erro ao atualizar (RecursoAudio): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
-
-        return null;
     }
 }

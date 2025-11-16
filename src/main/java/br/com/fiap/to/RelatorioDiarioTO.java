@@ -1,7 +1,6 @@
 package br.com.fiap.to;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import java.sql.Date;
 
 public class RelatorioDiarioTO {
@@ -9,21 +8,27 @@ public class RelatorioDiarioTO {
     private Long idRelatorio;
 
     @NotNull(message = "O ID do usuário é obrigatório")
-    private Long idUsuario; // FK T_DDD_USUARIO
+    private Long idUsuario;
 
     private Date dtRegistro;
 
+    @NotNull(message = "O nível de humor é obrigatório")
+    @Min(value = 1, message = "O nível de humor deve estar entre 1 e 5")
+    @Max(value = 5, message = "O nível de humor deve estar entre 1 e 5")
     private Integer nrNivelHumor;
 
+    @NotNull(message = "O nível de estresse é obrigatório")
+    @Min(value = 1, message = "O nível de estresse deve estar entre 1 e 5")
+    @Max(value = 5, message = "O nível de estresse deve estar entre 1 e 5")
     private Integer nrNivelEstresse;
 
     @Size(max = 255, message = "O log deve ter no máximo 255 caracteres")
     private String dsLogSemtimento;
 
-    // Construtores
     public RelatorioDiarioTO() {}
 
-    public RelatorioDiarioTO(Long idRelatorio, Long idUsuario, Date dtRegistro, Integer nrNivelHumor, Integer nrNivelEstresse, String dsLogSemtimento) {
+    public RelatorioDiarioTO(Long idRelatorio, Long idUsuario, Date dtRegistro,
+                             Integer nrNivelHumor, Integer nrNivelEstresse, String dsLogSemtimento) {
         this.idRelatorio = idRelatorio;
         this.idUsuario = idUsuario;
         this.dtRegistro = dtRegistro;

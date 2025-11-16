@@ -1,6 +1,6 @@
 package br.com.fiap.to;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import java.sql.Date;
 
 public class HistAtividadeTO {
@@ -8,19 +8,21 @@ public class HistAtividadeTO {
     private Long idHistAtividades;
 
     @NotNull(message = "O ID do usuário é obrigatório")
-    private Long idUsuario; // FK T_DDD_USUARIO
+    private Long idUsuario;
 
     @NotNull(message = "O ID da medida é obrigatório")
-    private Long idMedida; // FK T_DDD_MEDIDA_CUIDADO
+    private Long idMedida;
 
     private Date dtConclusao;
 
+    @Min(value = 0, message = "Os pontos ganhos não podem ser negativos")
+    @Max(value = 100, message = "Os pontos ganhos não podem exceder 100")
     private Integer nrPontosGanhos;
 
-    // Construtores
     public HistAtividadeTO() {}
 
-    public HistAtividadeTO(Long idHistAtividades, Long idUsuario, Long idMedida, Date dtConclusao, Integer nrPontosGanhos) {
+    public HistAtividadeTO(Long idHistAtividades, Long idUsuario, Long idMedida,
+                           Date dtConclusao, Integer nrPontosGanhos) {
         this.idHistAtividades = idHistAtividades;
         this.idUsuario = idUsuario;
         this.idMedida = idMedida;

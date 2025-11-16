@@ -1,22 +1,20 @@
 package br.com.fiap.to;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public class UsuarioAudioTO {
 
     @NotNull(message = "O ID do usuário é obrigatório")
-    private Long idUsuario; // PK, FK T_DDD_USUARIO
+    private Long idUsuario;
 
     @NotNull(message = "O ID do áudio é obrigatório")
-    private Long idAudio; // PK, FK T_DDD_RECURSO_AUDIO
+    private Long idAudio;
 
     @NotBlank(message = "O status de favorito é obrigatório")
-    @Size(max = 1, message = "O status de favorito deve ter 1 caractere (S ou N)")
+    @Pattern(regexp = "SIM|NAO", message = "Status inválido. Use: SIM ou NAO")
+    @Size(max = 3, message = "O status de favorito deve ter no máximo 3 caracteres")
     private String stFavorito;
 
-    // Construtores
     public UsuarioAudioTO() {}
 
     public UsuarioAudioTO(Long idUsuario, Long idAudio, String stFavorito) {
