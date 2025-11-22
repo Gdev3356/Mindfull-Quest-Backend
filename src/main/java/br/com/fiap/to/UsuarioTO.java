@@ -23,7 +23,7 @@ public class UsuarioTO {
     private Integer nrPontosGamificacao;
 
     @NotBlank(message = "O status do usuário é obrigatório")
-    @Pattern(regexp = "ATIVO|INATIVO|BLOQUEADO", message = "Status inválido. Use: ATIVO, INATIVO ou BLOQUEADO")
+    @Pattern(regexp = "A|I|B", message = "Status inválido. Use: A (Ativo), I (Inativo) ou B (Bloqueado)")
     private String stUsuario;
 
     private Long idAvatarAtivo;

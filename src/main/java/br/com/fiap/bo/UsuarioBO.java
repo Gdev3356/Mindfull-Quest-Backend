@@ -43,8 +43,8 @@ public class UsuarioBO {
             throw new BusinessRuleException("Os pontos de gamificação não podem ser negativos.");
         }
 
-        if (usuario.getStUsuario() == null || !usuario.getStUsuario().matches("ATIVO|INATIVO|BLOQUEADO")) {
-            throw new BusinessRuleException("Status do usuário inválido. Deve ser 'ATIVO', 'INATIVO' ou 'BLOQUEADO'.");
+        if (usuario.getStUsuario() == null || !usuario.getStUsuario().matches("A|I|B")) {
+            throw new BusinessRuleException("Status do usuário inválido. Deve ser 'A', 'I' ou 'B'.");
         }
     }
 
