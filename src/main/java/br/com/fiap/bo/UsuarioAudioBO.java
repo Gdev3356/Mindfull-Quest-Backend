@@ -21,8 +21,8 @@ public class UsuarioAudioBO {
             throw new BusinessRuleException("ID do Áudio é obrigatório e deve ser positivo.");
         }
 
-        if (ua.getStFavorito() == null || !ua.getStFavorito().matches("SIM|NAO")) {
-            throw new BusinessRuleException("Status de Favorito inválido. Deve ser 'SIM' ou 'NAO'.");
+        if (ua.getStFavorito() == null || !ua.getStFavorito().matches("S|N")) {
+            throw new BusinessRuleException("Status de Favorito inválido. Deve ser 'S ou 'N'.");
         }
     }
 
