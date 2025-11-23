@@ -16,8 +16,8 @@ public class UsuarioCosmeticoTO {
     private Date dtAquisicao;
 
     @NotBlank(message = "O status de favorito é obrigatório")
-    @Pattern(regexp = "SIM|NAO", message = "Status inválido. Use: SIM ou NAO")
-    @Size(max = 3, message = "O status de favorito deve ter no máximo 3 caracteres")
+    @Pattern(regexp = "S|N", message = "Status inválido. Use: S ou N")
+    @Size(max = 1, message = "O status de favorito deve ter no máximo 1 caracter")
     private String stFavorito;
 
     public UsuarioCosmeticoTO() {}

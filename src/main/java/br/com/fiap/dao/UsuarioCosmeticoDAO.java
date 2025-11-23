@@ -4,6 +4,7 @@ import br.com.fiap.to.UsuarioCosmeticoTO;
 import br.com.fiap.exception.DAOException;
 import br.com.fiap.exception.IdNotFoundException;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,14 +12,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UsuarioCosmeticoDAO {
-
     private static final String TABLE_NAME = "T_DDD_USUARIO_COSMETICO";
-
     private UsuarioCosmeticoTO mapResultSetToTO(ResultSet rs) throws SQLException {
         UsuarioCosmeticoTO uc = new UsuarioCosmeticoTO();
-        uc.setIdAquisicao(rs.getLong("ID_AQUISICAO"));
-        uc.setIdUsuario(rs.getLong("ID_USUARIO"));
-        uc.setIdCosmetico(rs.getLong("ID_COSMETICO"));
+        long idAquisicao = rs.getLong("ID_AQUISICAO");
+        uc.setIdAquisicao(idAquisicao);
+        long idUsuario = rs.getLong("ID_USUARIO");
+        uc.setIdUsuario(idUsuario);
+        long idCosmetico = rs.getLong("ID_COSMETICO");
+        uc.setIdCosmetico(idCosmetico);
         uc.setDtAquisicao(rs.getDate("DT_AQUISICAO"));
         uc.setStFavorito(rs.getString("ST_FAVORITO"));
         return uc;
@@ -26,54 +28,78 @@ public class UsuarioCosmeticoDAO {
 
     public List<UsuarioCosmeticoTO> findAll() {
         List<UsuarioCosmeticoTO> aquisicoes = new ArrayList<>();
-        String sql = "SELECT * FROM " + TABLE_NAME + " ORDER BY ID_AQUISICAO";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
 
-        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        String sql = "SELECT ID_AQUISICAO, ID_USUARIO, ID_COSMETICO, DT_AQUISICAO, ST_FAVORITO " +
+                "FROM " + TABLE_NAME + " ORDER BY ID_AQUISICAO";
+        try {
+            conn = ConnectionFactory.getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
 
             while (rs.next()) {
-                aquisicoes.add(mapResultSetToTO(rs));
+                try {
+                    aquisicoes.add(mapResultSetToTO(rs));
+                } catch (SQLException e) {
+                    System.err.println("Erro ao mapear usuário-cosmético: " + e.getMessage());
+                }
             }
-
         } catch (SQLException e) {
             throw new DAOException("Erro na consulta (findAll UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             ConnectionFactory.closeConnection();
         }
-
         return aquisicoes;
     }
 
     public UsuarioCosmeticoTO findById(Long id) {
         UsuarioCosmeticoTO uc = null;
-        String sql = "SELECT * FROM " + TABLE_NAME + " WHERE ID_AQUISICAO = ?";
-
-        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        String sql = "SELECT ID_AQUISICAO, ID_USUARIO, ID_COSMETICO, DT_AQUISICAO, ST_FAVORITO " +
+                "FROM " + TABLE_NAME + " WHERE ID_AQUISICAO = ?";
+        try {
+            conn = ConnectionFactory.getConnection();
+            ps = conn.prepareStatement(sql);
             ps.setLong(1, id);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    uc = mapResultSetToTO(rs);
-                } else {
-                    throw new IdNotFoundException("Aquisição de Cosmético com ID " + id + " não encontrada.");
-                }
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                uc = mapResultSetToTO(rs);
+            } else {
+                throw new IdNotFoundException("Aquisição de Cosmético com ID " + id + " não encontrada.");
             }
-
         } catch (SQLException e) {
             throw new DAOException("Erro na consulta (findById UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             ConnectionFactory.closeConnection();
         }
-
         return uc;
     }
 
     public UsuarioCosmeticoTO save(UsuarioCosmeticoTO uc) {
+        Connection conn = null;
+        PreparedStatement ps = null;
         String sql = "INSERT INTO " + TABLE_NAME +
                 " (ID_USUARIO, ID_COSMETICO, DT_AQUISICAO, ST_FAVORITO) " +
                 "VALUES (?, ?, ?, ?)";
-
-        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+        try {
+            conn = ConnectionFactory.getConnection();
+            ps = conn.prepareStatement(sql);
             ps.setLong(1, uc.getIdUsuario());
             ps.setLong(2, uc.getIdCosmetico());
             ps.setDate(3, uc.getDtAquisicao());
@@ -86,18 +112,24 @@ public class UsuarioCosmeticoDAO {
         } catch (SQLException e) {
             throw new DAOException("Erro ao salvar (UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
+            try {
+                if (ps != null) ps.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             ConnectionFactory.closeConnection();
         }
     }
 
     public boolean delete(Long id) {
+        Connection conn = null;
+        PreparedStatement ps = null;
         String sql = "DELETE FROM " + TABLE_NAME + " WHERE ID_AQUISICAO = ?";
-
-        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+        try {
+            conn = ConnectionFactory.getConnection();
+            ps = conn.prepareStatement(sql);
             ps.setLong(1, id);
-
             int rowsAffected = ps.executeUpdate();
-
             if (rowsAffected == 0) {
                 throw new IdNotFoundException("Aquisição de Cosmético com ID " + id + " não encontrada para exclusão.");
             }
@@ -105,24 +137,30 @@ public class UsuarioCosmeticoDAO {
         } catch (SQLException e) {
             throw new DAOException("Erro ao excluir (UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
+            try {
+                if (ps != null) ps.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             ConnectionFactory.closeConnection();
         }
     }
 
     public UsuarioCosmeticoTO update(UsuarioCosmeticoTO uc) {
+        Connection conn = null;
+        PreparedStatement ps = null;
         String sql = "UPDATE " + TABLE_NAME +
                 " SET ID_USUARIO=?, ID_COSMETICO=?, DT_AQUISICAO=?, ST_FAVORITO=? " +
                 "WHERE ID_AQUISICAO=?";
-
-        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+        try {
+            conn = ConnectionFactory.getConnection();
+            ps = conn.prepareStatement(sql);
             ps.setLong(1, uc.getIdUsuario());
             ps.setLong(2, uc.getIdCosmetico());
             ps.setDate(3, uc.getDtAquisicao());
             ps.setString(4, uc.getStFavorito());
             ps.setLong(5, uc.getIdAquisicao());
-
             int rowsAffected = ps.executeUpdate();
-
             if (rowsAffected == 0) {
                 throw new IdNotFoundException("Aquisição de Cosmético com ID " + uc.getIdAquisicao() + " não encontrada para atualização.");
             }
@@ -130,6 +168,11 @@ public class UsuarioCosmeticoDAO {
         } catch (SQLException e) {
             throw new DAOException("Erro ao atualizar (UsuarioCosmetico): " + e.getMessage(), e);
         } finally {
+            try {
+                if (ps != null) ps.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             ConnectionFactory.closeConnection();
         }
     }
