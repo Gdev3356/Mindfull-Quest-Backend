@@ -84,6 +84,7 @@ public class RelatorioDiarioDAO {
             return relatorio;
         } catch (SQLException e) {
             throw new DAOException("Erro ao salvar (RelatorioDiario): " + e.getMessage(), e);
+
         } finally {
             ConnectionFactory.closeConnection();
         }

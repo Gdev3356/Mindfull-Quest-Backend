@@ -20,12 +20,15 @@ public class UsuarioDAO {
         usuario.setNmUsuario(rs.getString("NM_USUARIO"));
         usuario.setDsEmail(rs.getString("DS_EMAIL"));
         usuario.setDsSenha(rs.getString("DS_SENHA"));
-        usuario.setNrPontosGamificacao(rs.getInt("NR_PONTOS_GAMIFICACAO"));
+
+        int pontos = rs.getInt("NR_PONTOS_GAMIFICACAO");
+        usuario.setNrPontosGamificacao(rs.wasNull() ? 0 : pontos);
+
         usuario.setStUsuario(rs.getString("ST_USUARIO"));
-        usuario.setIdAvatarAtivo(rs.getLong("ID_AVATAR_ATIVO"));
-        if (rs.wasNull()) {
-            usuario.setIdAvatarAtivo(null);
-        }
+
+        Long idAvatar = rs.getLong("ID_AVATAR_ATIVO");
+        usuario.setIdAvatarAtivo(rs.wasNull() ? null : idAvatar);
+
         return usuario;
     }
 
@@ -82,13 +85,13 @@ public class UsuarioDAO {
             ps.setString(1, usuario.getNmUsuario());
             ps.setString(2, usuario.getDsEmail());
             ps.setString(3, usuario.getDsSenha());
-            ps.setInt(4, usuario.getNrPontosGamificacao());
+            ps.setInt(4, usuario.getNrPontosGamificacao() != null ? usuario.getNrPontosGamificacao() : 0);
             ps.setString(5, usuario.getStUsuario());
 
             if (usuario.getIdAvatarAtivo() != null) {
                 ps.setLong(6, usuario.getIdAvatarAtivo());
             } else {
-                ps.setNull(6, java.sql.Types.INTEGER);
+                ps.setNull(6, java.sql.Types.NUMERIC);  // NUMERIC para Oracle NUMBER
             }
 
             if (ps.executeUpdate() == 0) {
@@ -130,13 +133,13 @@ public class UsuarioDAO {
             ps.setString(1, usuario.getNmUsuario());
             ps.setString(2, usuario.getDsEmail());
             ps.setString(3, usuario.getDsSenha());
-            ps.setInt(4, usuario.getNrPontosGamificacao());
+            ps.setInt(4, usuario.getNrPontosGamificacao() != null ? usuario.getNrPontosGamificacao() : 0);
             ps.setString(5, usuario.getStUsuario());
 
             if (usuario.getIdAvatarAtivo() != null) {
                 ps.setLong(6, usuario.getIdAvatarAtivo());
             } else {
-                ps.setNull(6, java.sql.Types.INTEGER);
+                ps.setNull(6, java.sql.Types.NUMERIC);  // NUMERIC para Oracle NUMBER
             }
 
             ps.setLong(7, usuario.getIdUsuario());
