@@ -25,8 +25,8 @@ public class UsuarioCosmeticoBO {
             throw new BusinessRuleException("A Data de Aquisição não pode ser uma data futura.");
         }
 
-        if (uc.getStFavorito() == null || !uc.getStFavorito().matches("SIM|NAO")) {
-            throw new BusinessRuleException("Status de Favorito inválido. Deve ser 'SIM' ou 'NAO'.");
+        if (uc.getStFavorito() == null || !uc.getStFavorito().matches("S|N")) {
+            throw new BusinessRuleException("Status de Favorito inválido. Deve ser 'S' ou 'N'.");
         }
     }
 
