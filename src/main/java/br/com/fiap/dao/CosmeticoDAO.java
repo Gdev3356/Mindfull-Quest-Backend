@@ -19,7 +19,12 @@ public class CosmeticoDAO {
         cosmetico.setIdCosmetico(rs.getLong("ID_COSMETICO"));
         cosmetico.setNmCosmetico(rs.getString("NM_COSMETICO"));
         cosmetico.setDsCaminhoImagem(rs.getString("DS_CAMINHO_IMAGEM"));
-        cosmetico.setNrCustoPontos(rs.getInt("NR_CUSTO_PONTOS"));
+
+        int custo = rs.getInt("NR_CUSTO_PONTOS");
+        cosmetico.setNrCustoPontos(rs.wasNull() ? 0 : custo);
+
+        cosmetico.setTpCosmetico(rs.getString("TP_COSMETICO"));
+
         return cosmetico;
     }
 
@@ -39,6 +44,7 @@ public class CosmeticoDAO {
         } finally {
             ConnectionFactory.closeConnection();
         }
+
         return cosmeticos;
     }
 
@@ -53,33 +59,34 @@ public class CosmeticoDAO {
                 if (rs.next()) {
                     cosmetico = mapResultSetToTO(rs);
                 } else {
-                    // Lança exceção se não encontrar
                     throw new IdNotFoundException("Cosmético com ID " + id + " não encontrado.");
                 }
             }
+
         } catch (SQLException e) {
             throw new DAOException("Erro na consulta (findById Cosmetico): " + e.getMessage(), e);
         } finally {
             ConnectionFactory.closeConnection();
         }
+
         return cosmetico;
     }
 
     public CosmeticoTO save(CosmeticoTO cosmetico) {
         String sql = "INSERT INTO " + TABLE_NAME +
-                " (NM_COSMETICO, DS_CAMINHO_IMAGEM, NR_CUSTO_PONTOS) " +
-                "VALUES (?, ?, ?)";
+                " (NM_COSMETICO, DS_CAMINHO_IMAGEM, NR_CUSTO_PONTOS, TP_COSMETICO) " +
+                "VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
             ps.setString(1, cosmetico.getNmCosmetico());
             ps.setString(2, cosmetico.getDsCaminhoImagem());
-            ps.setInt(3, cosmetico.getNrCustoPontos());
+            ps.setInt(3, cosmetico.getNrCustoPontos() != null ? cosmetico.getNrCustoPontos() : 0);
+            ps.setString(4, cosmetico.getTpCosmetico() != null ? cosmetico.getTpCosmetico() : "COMUM");
 
-            if (ps.executeUpdate() > 0) {
-                return cosmetico;
-            } else {
+            if (ps.executeUpdate() == 0) {
                 throw new DAOException("Erro ao salvar (Cosmetico): Nenhuma linha afetada.", null);
             }
+            return cosmetico;
         } catch (SQLException e) {
             throw new DAOException("Erro ao salvar (Cosmetico): " + e.getMessage(), e);
         } finally {
@@ -109,22 +116,22 @@ public class CosmeticoDAO {
 
     public CosmeticoTO update(CosmeticoTO cosmetico) {
         String sql = "UPDATE " + TABLE_NAME +
-                " SET NM_COSMETICO=?, DS_CAMINHO_IMAGEM=?, NR_CUSTO_PONTOS=? " +
+                " SET NM_COSMETICO=?, DS_CAMINHO_IMAGEM=?, NR_CUSTO_PONTOS=?, TP_COSMETICO=? " +
                 "WHERE ID_COSMETICO=?";
 
         try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
             ps.setString(1, cosmetico.getNmCosmetico());
             ps.setString(2, cosmetico.getDsCaminhoImagem());
-            ps.setInt(3, cosmetico.getNrCustoPontos());
-            ps.setLong(4, cosmetico.getIdCosmetico());
+            ps.setInt(3, cosmetico.getNrCustoPontos() != null ? cosmetico.getNrCustoPontos() : 0);
+            ps.setString(4, cosmetico.getTpCosmetico() != null ? cosmetico.getTpCosmetico() : "COMUM");
+            ps.setLong(5, cosmetico.getIdCosmetico());
 
             int rowsAffected = ps.executeUpdate();
 
-            if (rowsAffected > 0) {
-                return cosmetico;
-            } else {
+            if (rowsAffected == 0) {
                 throw new IdNotFoundException("Cosmético com ID " + cosmetico.getIdCosmetico() + " não encontrado para atualização.");
             }
+            return cosmetico;
         } catch (SQLException e) {
             throw new DAOException("Erro ao atualizar (Cosmetico): " + e.getMessage(), e);
         } finally {
