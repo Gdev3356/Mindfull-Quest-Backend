@@ -108,4 +108,20 @@ public class RelatorioDiarioResource {
         public String getMessage() { return message; }
         public void setMessage(String message) { this.message = message; }
     }
+
+    @GET
+    @Path("/usuario/{idUsuario}/ultimo")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response findLastByUserId(@PathParam("idUsuario") Long idUsuario) {
+        try {
+            RelatorioDiarioTO resultado = relatorioDiarioBO.findLastByUserId(idUsuario);
+            return Response.ok(resultado).build();
+        } catch (IdNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        } catch (DAOException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponse(e.getMessage())).build();
+        }
+    }
 }

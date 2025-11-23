@@ -129,4 +129,27 @@ public class RelatorioDiarioDAO {
             ConnectionFactory.closeConnection();
         }
     }
+
+    public RelatorioDiarioTO findLastByUserId(Long idUsuario) {
+        RelatorioDiarioTO relatorio = null;
+        String sql = "SELECT * FROM " + TABLE_NAME +
+                " WHERE ID_USUARIO = ? ORDER BY DT_REGISTRO DESC FETCH NEXT 1 ROWS ONLY";
+
+        try (PreparedStatement ps = ConnectionFactory.getConnection().prepareStatement(sql)) {
+            ps.setLong(1, idUsuario);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    relatorio = mapResultSetToTO(rs);
+                } else {
+                    throw new IdNotFoundException("Nenhum relatório encontrado para o usuário " + idUsuario);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DAOException("Erro ao buscar último relatório do usuário: " + e.getMessage(), e);
+        } finally {
+            ConnectionFactory.closeConnection();
+        }
+        return relatorio;
+    }
 }

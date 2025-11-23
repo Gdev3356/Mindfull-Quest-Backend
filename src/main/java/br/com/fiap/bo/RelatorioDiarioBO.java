@@ -53,4 +53,9 @@ public class RelatorioDiarioBO {
         validarRelatorio(relatorio);
         return relatorioDiarioDAO.update(relatorio);
     }
+
+    public RelatorioDiarioTO findLastByUserId(Long idUsuario) {
+        return relatorioDiarioDAO.findLastByUserId(idUsuario);
+    }
+
 }
